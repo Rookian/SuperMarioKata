@@ -1,0 +1,39 @@
+
+Spielfigur:
+ - hat Zustände:
+	- Normal/Klein
+	- MitPilz
+	- MitFeuerblume
+	- Mit Yoshi
+	- ...
+ - Hat Leben
+- Kann:
+	- Schießen
+	- VonGegnerGetroffenWerden
+	- 
+	
+	
+
+Leben:
+ - 
+
+Gegenstand:
+- Pilz
+- Feuerblume
+- Eis
+- Punkte
+
+
+
+Vehikel:
+- Yoshi
+
+
+SteuerbareEinheit
+- Yoshi
+- Spielfigur (Mario)
+- Kann:
+	- Laufen(Richtung)
+	- Springen()
+
+Spielfigur kann nur einen Gegenstand haben und nur einen Vehikel.
