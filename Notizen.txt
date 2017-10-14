@@ -11,9 +11,6 @@ Spielfigur:
 	- Schießen
 	- VonGegnerGetroffenWerden
 	- 
-	
-	
-
 Leben:
  - 
 
