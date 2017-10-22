@@ -1,5 +1,8 @@
+using System;
 using Shouldly;
 using Xunit;
+using System.Reactive.Linq;
+using System.Threading;
 
 namespace SuperMarioKata
 {
@@ -44,14 +47,14 @@ namespace SuperMarioKata
         [Fact]
         public void Wenn_alle_Leben_aufgebraucht_sind_ist_Super_Mario_tot()
         {
-            var mario = new Mario(0.Leben(), new KeinGegenstand());
+            var mario = new Mario(new KeinGegenstand());
             mario.WirdGetroffen().Leben.ShouldBeOfType<Tod>();
         }
 
         [Fact]
         public void Wenn_Super_Mario_ein_Leben_findet_erhˆhen_sich_seine_verf¸gbaren_Leben()
         {
-            var mario = new Mario(0.Leben(), new Pilz())
+            var mario = new Mario(new Pilz())
                 .FindetGegenstand(new LebensPunkt());
 
             mario.Leben.ShouldBe(1.Leben());
@@ -61,7 +64,7 @@ namespace SuperMarioKata
         [Fact]
         public void Wenn_Super_Mario_mit_Feuerblume_vom_Gegner_getroffen_wird_wird_er_zum_Mario_mit_Pilz()
         {
-            var mario = (IFigur)new Mario(0.Leben(), new Feuerblume());
+            var mario = (IFigur)new Mario(new Feuerblume());
             mario = mario.WirdGetroffen();
             mario.Leben.ShouldBe(0.Leben());
             mario.Gegenstand.ShouldBeOfType<Pilz>();
@@ -70,14 +73,14 @@ namespace SuperMarioKata
         [Fact]
         public void Wenn_Super_Mario_mit_Feuerblume_einen_Pilz_findet_beh‰lt_er_seine_Feuerblume()
         {
-            var mario = new Mario(0.Leben(), new Feuerblume()).FindetGegenstand(new Pilz());
+            var mario = new Mario(new Feuerblume()).FindetGegenstand(new Pilz());
             mario.Gegenstand.ShouldBeOfType<Feuerblume>();
         }
 
         [Fact]
         public void Wenn_Super_Mario_mit_Eisblume_vom_Gegner_getroffen_wird_wird_er_zum_Mario_mit_Pilz()
         {
-            var mario = new Mario(0.Leben(), new Eisblume())
+            var mario = new Mario(new Eisblume())
                 .WirdGetroffen();
 
             mario.Leben.ShouldBe(0.Leben());
@@ -87,7 +90,7 @@ namespace SuperMarioKata
         [Fact]
         public void Wenn_Super_Mario_mit_Eisblume_einen_Pilz_findet_beh‰lt_er_seine_Eisblume()
         {
-            var mario = new Mario(0.Leben(), new Eisblume());
+            var mario = new Mario(new Eisblume());
             mario.FindetGegenstand(new Pilz())
                 .Gegenstand.ShouldBeOfType<Eisblume>();
         }
@@ -95,7 +98,7 @@ namespace SuperMarioKata
         [Fact]
         public void Wenn_Super_Mario_mit_Eisblume_eine_Feuerblume_findet_wechselt_er_zur_Feuerblume()
         {
-            new Mario(0.Leben(), new Eisblume())
+            new Mario(new Eisblume())
                 .FindetGegenstand(new Feuerblume())
                 .Gegenstand.ShouldBeOfType<Feuerblume>();
         }
@@ -103,29 +106,71 @@ namespace SuperMarioKata
         [Fact]
         public void Wenn_Super_Mario_mit_Eisblume_den_Befehl_zum_Schieﬂen_erh‰lt_schieﬂt_er_Eis()
         {
-            var mario = new Mario(0.Leben(), new Eisblume());
+            var mario = new Mario(new Eisblume());
             mario.Schieﬂen().ShouldBeOfType<Eis>();
         }
 
         [Fact]
         public void Wenn_Super_Mario_mit_Feuerblume_den_Befehl_zum_Schieﬂen_erh‰lt_schieﬂt_er_Feuer()
         {
-            var mario = new Mario(0.Leben(), new Feuerblume());
+            var mario = new Mario(new Feuerblume());
             mario.Schieﬂen().ShouldBeOfType<Feuer>();
         }
 
         [Fact]
         public void Wenn_Super_Mario_mit_Pilz_den_Befehl_zum_Schieﬂen_erh‰lt_passiert_nichts()
         {
-            var mario = new Mario(0.Leben(), new Pilz());
+            var mario = new Mario(new Pilz());
             mario.Schieﬂen().ShouldBeOfType<KeinSchuss>();
         }
 
         [Fact]
         public void Wenn_kleiner_Super_Mario__den_Befehl_zum_Schieﬂen_erh‰lt_passiert_nichts()
         {
-            var mario = new Mario(0.Leben(), new KeinGegenstand());
+            var mario = new Mario(new KeinGegenstand());
             mario.Schieﬂen().ShouldBeOfType<KeinSchuss>();
+        }
+
+        [Fact]
+        public void Wenn_Mario_einen_Stern_findet_dann_verliert_er_diesen_automatisch_nach_2_Sekunden_wieder()
+        {
+            var mario = new Mario();
+            var marioMitStern = mario.FindetGegenstand(new Stern(mario.Gegenstand));
+            marioMitStern.Gegenstand.ShouldBeOfType<Stern>();
+            Thread.Sleep(1000 * 3);
+            marioMitStern.Gegenstand.ShouldBeOfType<KeinGegenstand>();
+        }
+
+        [Fact]
+        public void Wenn_Mario_aktuell_einen_Stern_besitzt_und_vom_Gegner_getroffen_wird_dann_passiert_ihm_nichts()
+        {
+
+        }
+
+        [Fact]
+        public void Wenn_ein_kleiner_Mario_mit_Stern_Pilz_oder_Blume_findet_w‰chst_er_beh‰lt_aber_seinen_Stern_bei()
+        {
+
+        }
+    }
+
+    public class Stern : IGegenstand
+    {
+        public Stern(IGegenstand gegenstand)
+        {
+            Gegenstand = gegenstand;
+        }
+
+        public IGegenstand Gegenstand { get; }
+
+        public IGegenstand Getroffen()
+        {
+            return this;
+        }
+
+        public ISchuss Schuss()
+        {
+            return Gegenstand.Schuss();
         }
     }
 
@@ -279,6 +324,15 @@ namespace SuperMarioKata
 
     public class Mario : IFigur
     {
+        /// <summary>
+        /// Mario mit 0 Leben
+        /// </summary>
+        /// <param name="gegenstand"></param>
+        public Mario(IGegenstand gegenstand) : this(0.Leben(), gegenstand) { }
+
+        /// <summary>
+        /// Kleiner Mario mit 3 Leben
+        /// </summary>
         public Mario()
         {
             Leben = new Leben(3);
@@ -289,10 +343,20 @@ namespace SuperMarioKata
         {
             Leben = leben;
             Gegenstand = gegenstand;
+
+            if (gegenstand is Stern stern)
+            {
+                Observable
+                    .Timer(TimeSpan.FromSeconds(2))
+                    .Subscribe(x =>
+                    {
+                        Gegenstand = stern.Gegenstand;
+                    });
+            }
         }
 
         public ILeben Leben { get; }
-        public IGegenstand Gegenstand { get; }
+        public IGegenstand Gegenstand { get; private set; }
 
         public IFigur WirdGetroffen()
         {
